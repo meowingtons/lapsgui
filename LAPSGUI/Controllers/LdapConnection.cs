@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
 using LAPSAPI.Models;
+using NLog;
 
 namespace LAPSAPI
 {
     public class LdapConnection
     {
+        private static Logger logger = LogManager.GetCurrentClassLogger();
         public string ServerHostname;
         public string BaseContext;
         public string BindUsername;

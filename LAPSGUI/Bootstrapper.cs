@@ -6,6 +6,9 @@ using System;
 using LAPSAPI.Models;
 using LAPSAPI.Controllers;
 using Microsoft.Extensions.Configuration;
+using NLog.Config;
+using NLog;
+using NLog.Targets;
 
 namespace LAPSAPI
 {
@@ -21,6 +24,20 @@ namespace LAPSAPI
         protected override void ApplicationStartup(TinyIoCContainer container, IPipelines pipelines)
         {
             base.ApplicationStartup(container, pipelines);
+
+            //configure the NLog stuff
+            LoggingConfiguration logConfig = new LoggingConfiguration();
+            FileTarget fileTarget = new FileTarget();
+            fileTarget.FileName = "${basedir}/logFile.txt";
+            logConfig.AddTarget("file", fileTarget);
+            fileTarget.Layout = @"${date:format=MM-dd-yyyy_HH\:mm\:ss} | ${message}";
+
+            var rule1 = new LoggingRule("*", LogLevel.Info, fileTarget);
+            logConfig.LoggingRules.Add(rule1);
+
+            LogManager.Configuration = logConfig;
+
+            //create configuration with validation for JWT tokens for federated authentication
             StatelessAuthenticationConfiguration configuration = new StatelessAuthenticationConfiguration(ctx =>
             {
                if (ctx.Request.Headers.Authorization == null || ctx.Request.Headers.Authorization == "")

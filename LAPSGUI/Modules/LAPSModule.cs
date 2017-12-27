@@ -5,11 +5,14 @@ using Newtonsoft.Json;
 using System;
 using System.Dynamic;
 using Microsoft.Extensions.Configuration;
+using NLog;
 
 namespace LAPSAPI
 {
     public class LAPSModule : NancyModule
     {
+        private static Logger logger = LogManager.GetCurrentClassLogger();
+
         IConfiguration _configuration;
 
         public LAPSModule(IConfiguration configuration)
@@ -21,7 +24,12 @@ namespace LAPSAPI
 
             LdapConnection ldap = new LdapConnection(_configuration["LDAPServerHostname"], _configuration["LDAPBaseContext"], _configuration["LDAPBindPassword"], _configuration["LDAPBindUsername"]);
 
-            Get["/api/computer/{ComputerName:maxlength(16)}/password"] = parameters => JsonConvert.SerializeObject(ldap.GetLocalAdminPassword(parameters.ComputerName));
+            Get["/api/computer/{ComputerName:maxlength(16)}/password"] = parameters =>
+            {
+                string output = JsonConvert.SerializeObject(ldap.GetLocalAdminPassword(parameters.ComputerName));
+                logger.Info(this.Context.CurrentUser.UserName + " - Successfully retrieved the local administrator password for computer: " + parameters.ComputerName);
+                return output;
+            };
 
             Get["/api/computer/{ComputerName:maxlength(16)}/expiration"] = parameters => JsonConvert.SerializeObject(ldap.GetLocalAdminExpirationDateUTC(parameters.ComputerName));
 
@@ -55,7 +63,7 @@ namespace LAPSAPI
 
                 catch (Exception ex)
                 {
-                    return ex.Message;
+                    return 500;
                 }
             };
         }
