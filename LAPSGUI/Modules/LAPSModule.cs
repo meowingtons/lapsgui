@@ -6,6 +6,7 @@ using System;
 using System.Dynamic;
 using Microsoft.Extensions.Configuration;
 using NLog;
+using LAPSAPI.Models;
 
 namespace LAPSAPI
 {
@@ -25,23 +26,47 @@ namespace LAPSAPI
 
             Get["/api/computer/{ComputerName:maxlength(16)}/password"] = parameters =>
             {
-                string output = JsonConvert.SerializeObject(ldap.GetLocalAdminPassword(parameters.ComputerName));
-                logger.Info(Context.CurrentUser.UserName + " - Successfully retrieved the local administrator password for computer: " + parameters.ComputerName);
-                return output;
+                try
+                {
+                    string output = JsonConvert.SerializeObject(ldap.GetLocalAdminPassword(parameters.ComputerName));
+                    logger.Info(Context.CurrentUser.UserName + " - Successfully retrieved the local administrator password for computer: " + parameters.ComputerName);
+                    return output;
+                }
+
+                catch (ObjectNotFoundException)
+                {
+                    return 404;
+                }
             };
 
             Get["/api/computer/{ComputerName:maxlength(16)}/expiration"] = parameters =>
             {
-                string output = JsonConvert.SerializeObject(ldap.GetLocalAdminExpirationDateUTC(parameters.ComputerName));
-                logger.Info(Context.CurrentUser.UserName + " - Successfully retrieved the local administrator password expiration date for computer: " + parameters.ComputerName);
-                return output;
-            };
+                try
+                {
+                    string output = JsonConvert.SerializeObject(ldap.GetLocalAdminExpirationDateUTC(parameters.ComputerName));
+                    logger.Info(Context.CurrentUser.UserName + " - Successfully retrieved the local administrator password expiration date for computer: " + parameters.ComputerName);
+                    return output;
+                }
+
+                    catch (ObjectNotFoundException)
+                {
+                    return 404;
+                }
+        };
 
             Get["/api/computer/{ComputerName:maxlength(16)}/history"] = parameters =>
             {
-                string output = JsonConvert.SerializeObject(ldap.GetLocalAdminPasswordHistory(parameters.ComputerName));
-                logger.Info(Context.CurrentUser.UserName + " - Successfully retrieved the local administrator password history for computer: " + parameters.ComputerName);
-                return output;
+                try
+                {
+                    string output = JsonConvert.SerializeObject(ldap.GetLocalAdminPasswordHistory(parameters.ComputerName));
+                    logger.Info(Context.CurrentUser.UserName + " - Successfully retrieved the local administrator password history for computer: " + parameters.ComputerName);
+                    return output;
+                }
+
+                catch (ObjectNotFoundException)
+                {
+                    return 404;
+                }
             };
 
             Get["/api/report/blankpasswords"] = _ => JsonConvert.SerializeObject(ldap.GetBlankLocalAdminPasswords());
@@ -73,7 +98,7 @@ namespace LAPSAPI
                     return 200;
                 }
 
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return 500;
                 }

@@ -10,12 +10,12 @@ namespace LAPSAPI
     public class LdapConnection
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
-        public string ServerHostname;
-        public string BaseContext;
-        public string BindUsername;
-        public string BindPassword;
+        private string ServerHostname;
+        private string BaseContext;
+        private string BindUsername;
+        private string BindPassword;
 
-        public LdapConnection(string LDAPServerHostname, string LDAPBaseContext, string LDAPBindPassword, string LDAPBindUsername )
+        public LdapConnection(string LDAPServerHostname, string LDAPBaseContext, string LDAPBindPassword, string LDAPBindUsername)
         {
             ServerHostname = LDAPServerHostname;
             BaseContext = LDAPBaseContext;
@@ -23,23 +23,44 @@ namespace LAPSAPI
             BindPassword = LDAPBindPassword;
         }
 
-        public Credential GetLocalAdminPassword(string computerName)
+        public PrincipalContext GetLdapPrincipalContext() => new PrincipalContext(ContextType.Domain, ServerHostname, BaseContext, ContextOptions.Negotiate, BindUsername, BindPassword);
+
+        private Principal SearchForComputer(string computerName)
         {
-            Credential result = new Credential();
-            result.ComputerName = computerName;
-
-            PrincipalContext currentDomain = new PrincipalContext(ContextType.Domain, ServerHostname, BaseContext, ContextOptions.Negotiate, BindUsername, BindPassword);
-
-            ComputerPrincipal computerQuery = new ComputerPrincipal(currentDomain);
+            ComputerPrincipal computerQuery = new ComputerPrincipal(GetLdapPrincipalContext());
             computerQuery.Name = computerName;
 
             PrincipalSearcher searchForComputer = new PrincipalSearcher(computerQuery);
             Principal searchResult = searchForComputer.FindOne();
+            
+            if (searchResult != null)
+            {
+                return searchResult;
+            }
+
+            throw new ObjectNotFoundException("Could not find computer with name: " + computerName);
+        }
+
+        public Credential GetLocalAdminPassword(string computerName)
+        {
+            Credential result = new Credential();
+            Principal searchResult = null;
+
+            try
+            {
+                searchResult = SearchForComputer(computerName);
+            }
+
+            catch (Exception ex)
+            {
+                throw ex;
+            }
 
             if (searchResult != null)
             {
                 DirectoryEntry underlyingComputer = searchResult.GetUnderlyingObject() as DirectoryEntry;
                 result.Password = underlyingComputer.Properties["ms-MCS-AdmPwd"].Value as string;
+                result.ComputerName = computerName;
 
                 return result;
             }
@@ -51,14 +72,17 @@ namespace LAPSAPI
         {
             ExpirationDateUTC result = new ExpirationDateUTC();
             result.ComputerName = computerName;
+            Principal searchResult = null;
 
-            PrincipalContext currentDomain = new PrincipalContext(ContextType.Domain, ServerHostname, BaseContext, ContextOptions.Negotiate, BindUsername, BindPassword);
+            try
+            {
+                searchResult = SearchForComputer(computerName);
+            }
 
-            ComputerPrincipal computerQuery = new ComputerPrincipal(currentDomain);
-            computerQuery.Name = computerName;
-
-            PrincipalSearcher searchForComputer = new PrincipalSearcher(computerQuery);
-            Principal searchResult = searchForComputer.FindOne();
+            catch (Exception ex)
+            {
+                throw ex;
+            }
 
             DirectoryEntry underlyingComputer = searchResult.GetUnderlyingObject() as DirectoryEntry;
             string attributeAsString = underlyingComputer.Properties["ms-MCS-AdmPwdExpirationTime"].Value as string;
@@ -72,14 +96,17 @@ namespace LAPSAPI
         {
             PasswordHistory result = new PasswordHistory();
             result.ComputerName = computerName;
+            Principal searchResult = null;
 
-            PrincipalContext currentDomain = new PrincipalContext(ContextType.Domain, ServerHostname, BaseContext, ContextOptions.Negotiate, BindUsername, BindPassword);
+            try
+            {
+                searchResult = SearchForComputer(computerName);
+            }
 
-            ComputerPrincipal computerQuery = new ComputerPrincipal(currentDomain);
-            computerQuery.Name = computerName;
-
-            PrincipalSearcher searchForComputer = new PrincipalSearcher(computerQuery);
-            Principal searchResult = searchForComputer.FindOne();
+            catch (Exception ex)
+            {
+                throw ex;
+            }
 
             DirectoryEntry underlyingComputer = searchResult.GetUnderlyingObject() as DirectoryEntry;
             Object[] obj = underlyingComputer.Properties["ms-MCS-AdmPwdHistory"].Value as Object[];
@@ -142,13 +169,17 @@ namespace LAPSAPI
 
         public void SetLocalAdminPasswordExpiration(string computerName, DateTime newExpirationTime)
         {
-            PrincipalContext currentDomain = new PrincipalContext(ContextType.Domain, ServerHostname, BaseContext, ContextOptions.Negotiate, BindUsername, BindPassword);
+            Principal searchResult = null;
 
-            ComputerPrincipal computerQuery = new ComputerPrincipal(currentDomain);
-            computerQuery.Name = computerName;
+            try
+            {
+                searchResult = SearchForComputer(computerName);
+            }
 
-            PrincipalSearcher searchForComputer = new PrincipalSearcher(computerQuery);
-            Principal searchResult = searchForComputer.FindOne();
+            catch (Exception ex)
+            {
+                throw ex;
+            }
 
             DirectoryEntry computerObject = searchResult.GetUnderlyingObject() as DirectoryEntry;
             computerObject.Properties["ms-MCS-AdmPwdExpirationTime"].Value = newExpirationTime.ToFileTime().ToString();
@@ -157,13 +188,17 @@ namespace LAPSAPI
 
         public void SetLocalAdminPasswordToExpired(string computerName)
         {
-            PrincipalContext currentDomain = new PrincipalContext(ContextType.Domain, ServerHostname, BaseContext, ContextOptions.Negotiate, BindUsername, BindPassword);
+            Principal searchResult = null;
 
-            ComputerPrincipal computerQuery = new ComputerPrincipal(currentDomain);
-            computerQuery.Name = computerName;
+            try
+            {
+                searchResult = SearchForComputer(computerName);
+            }
 
-            PrincipalSearcher searchForComputer = new PrincipalSearcher(computerQuery);
-            Principal searchResult = searchForComputer.FindOne();
+            catch (Exception ex)
+            {
+                throw ex;
+            }
 
             DirectoryEntry computerObject = searchResult.GetUnderlyingObject() as DirectoryEntry;
             computerObject.Properties["ms-MCS-AdmPwdExpirationTime"].Value = 0;
