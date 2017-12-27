@@ -40,7 +40,7 @@ namespace LAPSAPI
             //create configuration with validation for JWT tokens for federated authentication
             StatelessAuthenticationConfiguration configuration = new StatelessAuthenticationConfiguration(ctx =>
             {
-               if (ctx.Request.Headers.Authorization == null || ctx.Request.Headers.Authorization == "")
+               if (string.IsNullOrEmpty(ctx.Request.Headers.Authorization))
                {
                    //Auth header doesn't exist or is null, so assume no user
                    return null;

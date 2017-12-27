@@ -36,7 +36,7 @@ namespace LAPSAPI.Controllers
                 throw new UnauthorizedAccessException("TokenIssuerURI does not match");
             }
 
-            if (decodedToken.email == null || decodedToken.email == "")
+            if (string.IsNullOrEmpty(decodedToken.email))
             {
                 throw new Exception("UPN claim is not present");
             }
@@ -57,7 +57,7 @@ namespace LAPSAPI.Controllers
 
             catch (Exception ex)
             {
-                throw ex;
+                throw;
             }
         }
     }

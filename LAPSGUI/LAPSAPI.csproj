@@ -1,20 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
-
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
     <UserSecretsId>5d96449b-0344-452f-bdb2-5746bcae8adf</UserSecretsId>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
-
   <ItemGroup>
     <None Remove="appsettings.conf" />
   </ItemGroup>
-
   <ItemGroup>
-    <Folder Include="Tests\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="jose-jwt" Version="2.4.0" />
     <PackageReference Include="Microsoft.AspNetCore" Version="2.0.1" />
@@ -25,12 +20,10 @@
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="NLog" Version="4.4.12" />
   </ItemGroup>
-
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.DirectoryServices.AccountManagement" />
     <Reference Include="System.DirectoryServices.Protocols" />
   </ItemGroup>
-
 </Project>

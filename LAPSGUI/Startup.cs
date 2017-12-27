@@ -9,7 +9,7 @@ namespace LAPSAPI
 {
     public class Startup
     {
-        private readonly IConfiguration config;
+        private readonly IConfiguration _config;
 
         //Read Configuration Settings
         public Startup()
@@ -18,7 +18,7 @@ namespace LAPSAPI
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.conf");
 
-            config = builder.Build();
+            _config = builder.Build();
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -35,7 +35,7 @@ namespace LAPSAPI
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseOwin(x => x.UseNancy(opt => opt.Bootstrapper = new Bootstrapper(config)));
+            app.UseOwin(x => x.UseNancy(opt => opt.Bootstrapper = new Bootstrapper(_config)));
         }
     }
 }
