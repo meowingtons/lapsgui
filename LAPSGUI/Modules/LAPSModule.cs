@@ -19,7 +19,6 @@ namespace LAPSAPI
         {
             _configuration = configuration;
 
-            //this.RequiresHttps();
             this.RequiresAuthentication();
 
             LdapConnection ldap = new LdapConnection(_configuration["LDAPServerHostname"], _configuration["LDAPBaseContext"], _configuration["LDAPBindPassword"], _configuration["LDAPBindUsername"]);
@@ -27,13 +26,23 @@ namespace LAPSAPI
             Get["/api/computer/{ComputerName:maxlength(16)}/password"] = parameters =>
             {
                 string output = JsonConvert.SerializeObject(ldap.GetLocalAdminPassword(parameters.ComputerName));
-                logger.Info(this.Context.CurrentUser.UserName + " - Successfully retrieved the local administrator password for computer: " + parameters.ComputerName);
+                logger.Info(Context.CurrentUser.UserName + " - Successfully retrieved the local administrator password for computer: " + parameters.ComputerName);
                 return output;
             };
 
-            Get["/api/computer/{ComputerName:maxlength(16)}/expiration"] = parameters => JsonConvert.SerializeObject(ldap.GetLocalAdminExpirationDateUTC(parameters.ComputerName));
+            Get["/api/computer/{ComputerName:maxlength(16)}/expiration"] = parameters =>
+            {
+                string output = JsonConvert.SerializeObject(ldap.GetLocalAdminExpirationDateUTC(parameters.ComputerName));
+                logger.Info(Context.CurrentUser.UserName + " - Successfully retrieved the local administrator password expiration date for computer: " + parameters.ComputerName);
+                return output;
+            };
 
-            Get["/api/computer/{ComputerName:maxlength(16)}/history"] = parameters => JsonConvert.SerializeObject(ldap.GetLocalAdminPasswordHistory(parameters.ComputerName));
+            Get["/api/computer/{ComputerName:maxlength(16)}/history"] = parameters =>
+            {
+                string output = JsonConvert.SerializeObject(ldap.GetLocalAdminPasswordHistory(parameters.ComputerName));
+                logger.Info(Context.CurrentUser.UserName + " - Successfully retrieved the local administrator password history for computer: " + parameters.ComputerName);
+                return output;
+            };
 
             Get["/api/report/blankpasswords"] = _ => JsonConvert.SerializeObject(ldap.GetBlankLocalAdminPasswords());
 
@@ -44,6 +53,7 @@ namespace LAPSAPI
                     dynamic obj = JsonConvert.DeserializeObject<ExpandoObject>(Request.Body.AsString());
                     DateTime newExpirationTime = Convert.ToDateTime(obj.newExpirationTime);
                     ldap.SetLocalAdminPasswordExpiration(parameters.ComputerName, newExpirationTime);
+                    logger.Info(Context.CurrentUser.UserName + " - Successfully updated the local administrator password expiration time for computer: " + parameters.ComputerName + "to time: " + obj.newExpirationTime);
                     return obj.newExpirationTime;
                 }
 
@@ -58,6 +68,8 @@ namespace LAPSAPI
                 try
                 {
                     ldap.SetLocalAdminPasswordToExpired(parameters.ComputerName);
+                    logger.Info(Context.CurrentUser.UserName + " - Successfully set forced the local administrator password to expire for computer: " + parameters.ComputerName);
+
                     return 200;
                 }
 
